@@ -54,6 +54,7 @@ module.exports = {
     refreshExpirationDays: envVars.JWT_REFRESH_EXPIRATION_DAYS,
     resetPasswordExpirationMinutes: 10,
     emailVerificationExpirationDays: 15,
+    otpExpirationMinutes: 5,
   },
   email: {
     smtp: {

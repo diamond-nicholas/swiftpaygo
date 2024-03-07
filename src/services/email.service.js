@@ -1,21 +1,24 @@
 const nodemailer = require("nodemailer");
 const config = require("../config/config");
 const logger = require("../config/logger");
+const sgMail = require("@sendgrid/mail");
 
-const transport = nodemailer.createTransport(config.email.smtp);
-
-transport
-  .verify()
-  .then(() => logger.info("Connected to email server"))
-  .catch(() =>
-    logger.warn(
-      "Unable to connect to email server. Make sure you have configured the SMTP options in .env"
-    )
-  );
+sgMail.setApiKey(config.sendgrid.apiKey);
 
 const sendEmail = async (to, subject, text) => {
-  const msg = { from: config.email.from, to, subject, text };
-  await transport.sendMail(msg);
+  const msg = {
+    to, // Recipient's email address
+    from: config.sendgrid.send_email, // Your verified sender
+    subject,
+    text,
+  };
+  try {
+    await sgMail.send(msg);
+    logger.info(`Email sent successfully to ${to}`);
+  } catch (error) {
+    logger.warn(`Unable to send email to ${to}. Error: ${error.message}`);
+    throw error; // Propagate the error if needed
+  }
 };
 
 const sendResetPasswordEmail = async (to, token) => {
@@ -86,7 +89,7 @@ const sendReminderEmail = async (to, user, reservationId) => {
 };
 
 module.exports = {
-  transport,
+  // transport,
   sendEmail,
   sendResetPasswordEmail,
   sendEmailVerificationEmail,

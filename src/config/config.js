@@ -8,6 +8,10 @@ const envVarsSchema = Joi.object()
   .keys({
     NODE_ENV: Joi.string().valid("production", "development").required(),
     PORT: Joi.number().default(3000),
+    SENDGRID_API_KEY: Joi.string().required().description("SendGrid API key"),
+    SENDGRID_SEND_EMAIL: Joi.string()
+      .required()
+      .description("SendGrid API key"),
     CLIENT_URL: Joi.string().allow("").default("*"),
     MONGODB_URL: Joi.string().required().description("Mongo DB url"),
     MONGODB_URL_DEV: Joi.string().required().description("Mongo DB Dev url"),
@@ -60,11 +64,16 @@ module.exports = {
     smtp: {
       host: envVars.SMTP_HOST,
       port: envVars.SMTP_PORT,
+      secure: true,
       auth: {
         user: envVars.SMTP_USERNAME,
         pass: envVars.SMTP_PASSWORD,
       },
     },
     from: envVars.EMAIL_FROM,
+  },
+  sendgrid: {
+    apiKey: envVars.SENDGRID_API_KEY,
+    send_email: envVars.SENDGRID_SEND_EMAIL,
   },
 };

@@ -7,8 +7,8 @@ sgMail.setApiKey(config.sendgrid.apiKey);
 
 const sendEmail = async (to, subject, text) => {
   const msg = {
-    to, // Recipient's email address
-    from: config.sendgrid.send_email, // Your verified sender
+    to,
+    from: config.sendgrid.send_email,
     subject,
     text,
   };
@@ -17,7 +17,7 @@ const sendEmail = async (to, subject, text) => {
     logger.info(`Email sent successfully to ${to}`);
   } catch (error) {
     logger.warn(`Unable to send email to ${to}. Error: ${error.message}`);
-    throw error; // Propagate the error if needed
+    throw error;
   }
 };
 
@@ -43,6 +43,15 @@ const sendEmailVerificationOTP = async (to, token) => {
   const subject = "Email Verification Code";
   const text = `Dear user,
   You requested for a verification code
+  ${token}
+  Copy to your activation code or ignore if this wasn't you.`;
+  await sendEmail(to, subject, text);
+};
+
+const ResendEmailVerificationOTP = async (to, token) => {
+  const subject = "Refresh Email Verification Code";
+  const text = `Dear user,
+  You requested for a refresh verification code
   ${token}
   Copy to your activation code or ignore if this wasn't you.`;
   await sendEmail(to, subject, text);
@@ -98,4 +107,5 @@ module.exports = {
   sendAdminReservationEmail,
   sendReminderEmail,
   sendEmailVerificationOTP,
+  ResendEmailVerificationOTP,
 };

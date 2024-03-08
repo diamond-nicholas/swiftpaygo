@@ -29,13 +29,16 @@ const saveToken = async (token, userId, expires, type, blacklisted = false) => {
   return tokenDoc;
 };
 
+const generateOTP = () => {
+  return Math.floor(10000 + Math.random() * 90000).toString();
+};
+
 const generateAndSaveOTP = async (user) => {
-  const otp = Math.floor(10000 + Math.random() * 90000).toString();
+  const otp = generateOTP();
+  console.log(otp);
   user.otp = otp;
+  user.otpExpires = moment().add(config.jwt.otpExpirationMinutes, "minutes");
   await user.save();
-  const expire = moment().add(config.jwt.otpExpirationMinutes, "minutes");
-  const otpToken = generateToken(user.id, expire, tokenTypes.OTP);
-  await saveToken(otpToken, user.id, expire, tokenTypes.OTP);
   return otp;
 };
 
@@ -53,19 +56,23 @@ const verifyToken = async (token, type) => {
   return tokenDoc;
 };
 
-const verifyOTP = async (token) => {
-  const tokenDoc = await verifyToken(token, tokenTypes.OTP);
-  const userId = tokenDoc.user;
-  const user = await userService.getUserById(userId);
-  if (!user || user.otp !== tokenDoc.token) {
-    throw new ApiError(httpStatus.NOT_FOUND, "No users found");
+const verifyOTP = async (otp) => {
+  const user = await User.findOne({ otp });
+
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User not found or OTP mismatch");
+  }
+
+  const isOTPMatch = await user.verifyOTP(otp);
+
+  if (!isOTPMatch) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User not found or OTP mismatch");
   }
 
   user.otp = undefined;
+  user.otpExpires = undefined;
   await user.save();
 
-  tokenDoc.used = true;
-  await tokenDoc.save();
   return user;
 };
 

@@ -9,6 +9,24 @@ const register = {
     password: Joi.string().required().custom(password),
   }),
 };
+
+const verifyAuthOTP = {
+  headers: Joi.object({
+    token: Joi.string().required(),
+  }),
+  body: Joi.object().keys({
+    otp: Joi.string().required(),
+  }),
+};
+
+const resendOTP = {
+  headers: Joi.object({
+    token: Joi.string().required(),
+  }),
+};
+
 module.exports = {
   register,
+  verifyAuthOTP,
+  resendOTP,
 };

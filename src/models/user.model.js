@@ -26,6 +26,11 @@ const userSchema = mongoose.Schema(
     otp: {
       type: String,
       trim: true,
+      private: true,
+    },
+    otpExpires: {
+      type: Date,
+      private: true,
     },
     mobile: {
       type: String,
@@ -56,7 +61,6 @@ const userSchema = mongoose.Schema(
     },
     transactionPin: {
       type: String,
-      // required: true,
       trim: true,
       validate(value) {
         if (!validator.isNumeric(value) || value.length !== 4) {
@@ -70,45 +74,22 @@ const userSchema = mongoose.Schema(
       enum: userRoles,
       default: "user",
     },
-    // activeTeam: {
-    //   type: mongoose.SchemaTypes.ObjectId,
-    //   ref: "Team",
-    //   required: false,
-    // },
-    // teams: {
-    //   type: [
-    //     {
-    //       id: {
-    //         type: mongoose.SchemaTypes.ObjectId,
-    //         ref: "Team",
-    //         required: true,
-    //       },
-    //       name: {
-    //         type: String,
-    //         required: true,
-    //         trim: true,
-    //       },
-    //       role: {
-    //         type: String,
-    //         enum: teamRoles,
-    //         required: true,
-    //       },
-    //     },
-    //   ],
-    //   required: false,
-    // },
   },
   {
     timestamps: true,
   }
 );
 
-// add plugin that converts mongoose to json
 userSchema.plugin(toJSON);
 userSchema.plugin(paginate);
 
 userSchema.statics.isEmailTaken = async function (email, excludeUserId) {
   const user = await this.findOne({ email, _id: { $ne: excludeUserId } });
+  return !!user;
+};
+
+userSchema.statics.isMobileTaken = async function (mobile) {
+  const user = await this.findOne({ mobile });
   return !!user;
 };
 
@@ -120,15 +101,10 @@ userSchema.methods.isPasswordMatch = async function (password) {
 userSchema.pre("save", async function (next) {
   const user = this;
   if (user.isModified("password")) {
-    user.password = await bcrypt.hash(user.password, 8);
+    user.password = await bcrypt.hash(user.password, parseInt(5, 10));
   }
-  next();
-});
-
-userSchema.pre("save", async function (next) {
-  const user = this;
-  if (user.isModified("otp")) {
-    user.otp = await bcrypt.hash(user.otp, 8);
+  if (user.isModified("otp") && user.otp) {
+    user.otp = await bcrypt.hash(user.otp, parseInt(5, 10));
   }
   next();
 });

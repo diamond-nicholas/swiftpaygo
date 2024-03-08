@@ -19,7 +19,6 @@ const tokenSchema = mongoose.Schema(
       enum: [
         tokenTypes.ACCESS,
         tokenTypes.REFRESH,
-        tokenTypes.OTP,
         tokenTypes.RESET_PASSWORD,
         tokenTypes.EMAIL_VERIFICATION,
       ],

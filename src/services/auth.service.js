@@ -6,12 +6,162 @@ const ApiError = require("../utils/ApiError");
 const { tokenTypes } = require("../config/token");
 const logger = require("../config/logger");
 const bcrypt = require("bcryptjs");
+const config = require("../config/config");
+const moment = require("moment");
 
 const registerUser = async (userBody) => {
   if (await User.isEmailTaken(userBody.email)) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Email already taken");
   }
+  if (await User.isMobileTaken(userBody.mobile)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Mobile number already taken");
+  }
   const user = await User.create(userBody);
+  return user;
+};
+
+const resendOTP = async (accessToken) => {
+  const accessTokenDoc = await Token.findOne({
+    token: accessToken,
+    type: tokenTypes.ACCESS,
+  });
+
+  if (!accessTokenDoc) {
+    throw new Error("Invalid or expired access token");
+  }
+
+  const curr_user = await User.findOne({ _id: accessTokenDoc.user });
+
+  if (!curr_user) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  const newOTP = Math.floor(10000 + Math.random() * 90000).toString();
+  const expire = moment().add(config.jwt.otpExpirationMinutes, "minutes");
+  curr_user.otp = newOTP;
+  curr_user.otpExpires = expire;
+  await curr_user.save();
+
+  const userinfo = {
+    otp: newOTP,
+    user: curr_user.email,
+  };
+  return userinfo;
+};
+
+// const resendOTP = async (accessToken) => {
+//   const accessTokenDoc = await Token.findOne({
+//     token: accessToken,
+//     type: tokenTypes.ACCESS,
+//   });
+
+//   if (!accessTokenDoc) {
+//     throw new Error("Invalid or expired access token");
+//   }
+
+//   const curr_user = await User.findOne({ _id: accessTokenDoc.user });
+
+//   if (!curr_user) {
+//     throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+//   }
+
+//   const existingToken = await Token.findOne({
+//     type: tokenTypes.OTP,
+//     used: false,
+//     expires: { $gt: new Date() },
+//   });
+
+//   if (!existingToken) {
+//     const user = await userService.getUserById(curr_user.id);
+//     if (!user) {
+//       throw new Error("User not found");
+//     }
+
+//     const newOTP = Math.floor(10000 + Math.random() * 90000).toString();
+//     const expire = moment().add(config.jwt.otpExpirationMinutes, "minutes");
+//     const otpToken = tokenService.generateToken(
+//       user.id,
+//       expire,
+//       tokenTypes.OTP
+//     );
+//     await tokenService.saveToken(otpToken, user.id, expire, tokenTypes.OTP);
+//     user.otp = newOTP;
+//     await user.save();
+//     const userinfo = {
+//       otp: newOTP,
+//       user: user.email,
+//     };
+//     console.log(userinfo);
+//     return userinfo;
+//   } else {
+//     const remainingTime = moment(existingToken.expires).diff(
+//       moment(),
+//       "seconds"
+//     );
+//     return { message: "OTP token is still valid", remainingTime };
+//   }
+// };
+
+// const verifyAuthOTP = async (otp, accessToken) => {
+//   const accessTokenDoc = await Token.findOne({
+//     token: accessToken,
+//     type: tokenTypes.ACCESS,
+//   });
+
+//   if (!accessTokenDoc) {
+//     throw new Error("Invalid or expired access token");
+//   }
+
+//   const curr_user = await User.findOne({ _id: accessTokenDoc.user });
+//   console.log(curr_user);
+
+//   if (!curr_user) {
+//     throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+//   }
+
+//   const user = await tokenService.verifyOTP(otp);
+
+//   if (user.id !== curr_user.id) {
+//     throw new ApiError(
+//       httpStatus.UNAUTHORIZED,
+//       "Invalid user ID for the provided OTP"
+//     );
+//   }
+//   user.isEmailVerified = true;
+//   await user.save();
+//   return user;
+// };
+const verifyAuthOTP = async (otp, accessToken) => {
+  const accessTokenDoc = await Token.findOne({
+    token: accessToken,
+    type: tokenTypes.ACCESS,
+  });
+
+  if (!accessTokenDoc) {
+    throw new Error("Invalid or expired access token");
+  }
+
+  const user = await User.findOne({ _id: accessTokenDoc.user });
+
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  if (!user.otp || !otp) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "OTP is missing");
+  }
+
+  const isOTPMatch = await user.verifyOTP(otp);
+
+  if (!isOTPMatch) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid OTP");
+  }
+
+  user.isEmailVerified = true;
+  user.otp = undefined;
+  user.otpExpires = undefined;
+  await user.save();
+
   return user;
 };
 
@@ -116,6 +266,8 @@ const logoutUser = async (refreshToken) => {
 
 module.exports = {
   registerUser,
+  verifyAuthOTP,
+  resendOTP,
   loginUserWithEmailAndPassword,
   changePassword,
   emailVerification,

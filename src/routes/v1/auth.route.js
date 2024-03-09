@@ -22,4 +22,10 @@ router.post(
   authController.verifyAuthOTP
 );
 
+router.post(
+  "/transaction-pin",
+  validate(authValidation.setTransactionPin),
+  authController.setTransactionPin
+);
+
 module.exports = router;

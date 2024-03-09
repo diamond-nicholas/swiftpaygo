@@ -25,8 +25,19 @@ const resendOTP = {
   }),
 };
 
+const setTransactionPin = {
+  headers: Joi.object({
+    token: Joi.string().required(),
+  }),
+  body: Joi.object().keys({
+    transaction_pin: Joi.string().required(),
+    confirm_transaction_pin: Joi.string().required(),
+  }),
+};
+
 module.exports = {
   register,
   verifyAuthOTP,
   resendOTP,
+  setTransactionPin,
 };

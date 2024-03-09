@@ -74,4 +74,22 @@ const verifyAuthOTP = catchAsync(async (req, res) => {
   });
 });
 
-module.exports = { registerUser, verifyAuthOTP, resendOTP };
+const setTransactionPin = catchAsync(async (req, res) => {
+  if (!req.headers.authorization) {
+    throw new Error("Token is required");
+  }
+  const [, token] = req.headers.authorization.split(" ");
+  const result = await authService.setTransactionPin(token, req.body);
+
+  res.status(httpStatus.OK).send({
+    data: result,
+    message: "Successfully set transaction pin ",
+  });
+});
+
+module.exports = {
+  registerUser,
+  verifyAuthOTP,
+  resendOTP,
+  setTransactionPin,
+};

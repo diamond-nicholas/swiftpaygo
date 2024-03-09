@@ -98,6 +98,11 @@ userSchema.methods.isPasswordMatch = async function (password) {
   return bcrypt.compare(password, user.password);
 };
 
+userSchema.methods.isTransactionPinMatch = async function (transactionPin) {
+  const user = this;
+  return bcrypt.compare(transactionPin, user.transactionPin);
+};
+
 userSchema.pre("save", async function (next) {
   const user = this;
   if (user.isModified("password")) {
@@ -105,6 +110,12 @@ userSchema.pre("save", async function (next) {
   }
   if (user.isModified("otp") && user.otp) {
     user.otp = await bcrypt.hash(user.otp, parseInt(5, 10));
+  }
+  if (user.isModified("transactionPin")) {
+    user.transactionPin = await bcrypt.hash(
+      user.transactionPin,
+      parseInt(5, 10)
+    );
   }
   next();
 });

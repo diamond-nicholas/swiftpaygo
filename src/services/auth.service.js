@@ -165,6 +165,31 @@ const verifyAuthOTP = async (otp, accessToken) => {
   return user;
 };
 
+const setTransactionPin = async (accessToken, userPin) => {
+  const accessTokenDoc = await Token.findOne({
+    token: accessToken,
+    type: tokenTypes.ACCESS,
+  });
+
+  if (!accessTokenDoc) {
+    throw new Error("Invalid or expired access token");
+  }
+
+  const user = await User.findOne({ _id: accessTokenDoc.user });
+
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  if (userPin.transaction_pin !== userPin.confirm_transaction_pin) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, "Transaction pin mismatch");
+  }
+  user.transactionPin = userPin.transaction_pin;
+  await user.save();
+
+  return user;
+};
+
 const loginUserWithEmailAndPassword = async (email, password) => {
   const user = await User.findOne({ email });
   if (!user || !(await user.isPasswordMatch(password))) {
@@ -268,6 +293,7 @@ module.exports = {
   registerUser,
   verifyAuthOTP,
   resendOTP,
+  setTransactionPin,
   loginUserWithEmailAndPassword,
   changePassword,
   emailVerification,

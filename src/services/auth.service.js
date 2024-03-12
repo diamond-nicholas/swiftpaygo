@@ -147,8 +147,8 @@ const verifyAuthOTP = async (otp, accessToken) => {
     throw new ApiError(httpStatus.NOT_FOUND, "User not found");
   }
 
-  if (!user.otp || !otp) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "OTP is missing");
+  if (!user.otp) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "This user is already verified");
   }
 
   const isOTPMatch = await user.verifyOTP(otp);

@@ -35,7 +35,6 @@ const generateOTP = () => {
 
 const generateAndSaveOTP = async (user) => {
   const otp = generateOTP();
-  // console.log(otp);
   user.otp = otp;
   user.otpExpires = moment().add(config.jwt.otpExpirationMinutes, "minutes");
   await user.save();
@@ -43,12 +42,7 @@ const generateAndSaveOTP = async (user) => {
 };
 
 const generateResetPasswordOTP = async (user) => {
-  // const user = await userService.getUserByEmail(email);
-  // if (!user) {
-  //   throw new ApiError(httpStatus.NOT_FOUND, "No users found with this email");
-  // }
   const otp = generateOTP();
-  console.log(otp);
   user.resetOtp = otp;
   user.resetOtpExpires = moment().add(
     config.jwt.otpExpirationMinutes,
@@ -79,12 +73,15 @@ const verifyOTP = async (otp) => {
     throw new ApiError(httpStatus.NOT_FOUND, "User not found or OTP mismatch");
   }
 
+  if (user.otpExpires && user.otpExpires < Date.now()) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "OTP has expired");
+  }
+
   const isOTPMatch = await user.verifyOTP(otp);
 
   if (!isOTPMatch) {
     throw new ApiError(httpStatus.NOT_FOUND, "User not found or OTP mismatch");
   }
-  console.log(isOTPMatch);
 
   user.otp = undefined;
   user.otpExpires = undefined;

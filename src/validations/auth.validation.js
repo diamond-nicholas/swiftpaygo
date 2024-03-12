@@ -58,6 +58,15 @@ const resetPasswordFromEmailToken = {
   }),
 };
 
+const refreshTokens = {
+  body: Joi.object().keys({}),
+  cookies: Joi.object()
+    .keys({
+      refreshToken: Joi.string().required(),
+    })
+    .unknown(true),
+};
+
 module.exports = {
   register,
   loginUserWithEmailAndPassword,
@@ -66,4 +75,5 @@ module.exports = {
   setTransactionPin,
   forgotPassword,
   resetPasswordFromEmailToken,
+  refreshTokens,
 };

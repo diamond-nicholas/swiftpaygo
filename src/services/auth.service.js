@@ -267,6 +267,27 @@ const forgetPassword = async (email) => {
   return resetPasswordToken;
 };
 
+const refreshAuth = async (refreshToken) => {
+  try {
+    const refreshTokenDoc = await tokenService.verifyToken(
+      refreshToken,
+      tokenTypes.REFRESH
+    );
+
+    const user = await userService.getUserById(refreshTokenDoc.user);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    // await refreshTokenDoc.remove();
+    await Token.findByIdAndDelete(refreshTokenDoc._id);
+    console.log(user);
+    return { user, tokens: await tokenService.generateAuthTokens(user) };
+  } catch (error) {
+    // console.error("Refresh Auth Error:", error);
+    throw new ApiError(httpStatus.UNAUTHORIZED, "Please authenticate");
+  }
+};
+
 const resetPasswordFromEmailToken = async (resetPasswordToken, newPassword) => {
   const resetPasswordTokenDoc = await tokenService.verifyToken(
     resetPasswordToken,
@@ -313,4 +334,5 @@ module.exports = {
   resetPasswordFromEmailToken,
   logoutUser,
   forgetPassword,
+  refreshAuth,
 };

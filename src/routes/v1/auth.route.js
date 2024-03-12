@@ -40,4 +40,10 @@ router.post(
   authController.setTransactionPin
 );
 
+router.post(
+  "/refresh-tokens",
+  validate(authValidation.refreshTokens),
+  authController.refreshTokens
+);
+
 module.exports = router;

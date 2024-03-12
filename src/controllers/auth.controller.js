@@ -112,6 +112,20 @@ const forgotPassword = catchAsync(async (req, res) => {
     .send({ message: "Password reset token sent to email" });
 });
 
+const refreshTokens = catchAsync(async (req, res) => {
+  const { user, tokens } = await authService.refreshAuth(
+    req.cookies.refreshToken
+  );
+  res
+    .cookie("refreshToken", tokens.refresh.token, {
+      maxAge: tokens.refresh.maxAge,
+      httpOnly: true,
+      sameSite: "none",
+      secure: true,
+    })
+    .send({ user, token: tokens.access });
+});
+
 module.exports = {
   registerUser,
   loginUserWithEmailAndPassword,
@@ -119,6 +133,7 @@ module.exports = {
   resendOTP,
   setTransactionPin,
   forgotPassword,
+  refreshTokens,
 };
 
 // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9

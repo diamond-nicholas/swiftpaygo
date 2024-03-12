@@ -10,6 +10,13 @@ const register = {
   }),
 };
 
+const loginUserWithEmailAndPassword = {
+  body: Joi.object().keys({
+    email: Joi.string().required(),
+    password: Joi.string().required().custom(password),
+  }),
+};
+
 const verifyAuthOTP = {
   headers: Joi.object({
     token: Joi.string().required(),
@@ -35,9 +42,28 @@ const setTransactionPin = {
   }),
 };
 
+const forgotPassword = {
+  body: Joi.object().keys({
+    email: Joi.string().required(),
+  }),
+};
+
+const resetPasswordFromEmailToken = {
+  headers: Joi.object({
+    token: Joi.string().required(),
+  }),
+  body: Joi.object().keys({
+    new_password: Joi.string().required(),
+    confirm_new_password: Joi.string().required(),
+  }),
+};
+
 module.exports = {
   register,
+  loginUserWithEmailAndPassword,
   verifyAuthOTP,
   resendOTP,
   setTransactionPin,
+  forgotPassword,
+  resetPasswordFromEmailToken,
 };

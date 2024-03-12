@@ -32,6 +32,15 @@ const userSchema = mongoose.Schema(
       type: Date,
       private: true,
     },
+    resetOtp: {
+      type: String,
+      trim: true,
+      private: true,
+    },
+    resetOtpExpires: {
+      type: Date,
+      private: true,
+    },
     mobile: {
       type: String,
       required: true,
@@ -74,6 +83,10 @@ const userSchema = mongoose.Schema(
       enum: userRoles,
       default: "user",
     },
+    profile: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: "UserProfile",
+    },
   },
   {
     timestamps: true,
@@ -103,6 +116,11 @@ userSchema.methods.isTransactionPinMatch = async function (transactionPin) {
   return bcrypt.compare(transactionPin, user.transactionPin);
 };
 
+userSchema.methods.isResetOtpMatch = async function (resetOtp) {
+  const user = this;
+  return bcrypt.compare(resetOtp, user.resetOtp);
+};
+
 userSchema.pre("save", async function (next) {
   const user = this;
   if (user.isModified("password")) {
@@ -111,11 +129,14 @@ userSchema.pre("save", async function (next) {
   if (user.isModified("otp") && user.otp) {
     user.otp = await bcrypt.hash(user.otp, parseInt(5, 10));
   }
-  if (user.isModified("transactionPin")) {
+  if (user.isModified("transactionPin") && user.transactionPin) {
     user.transactionPin = await bcrypt.hash(
       user.transactionPin,
       parseInt(5, 10)
     );
+  }
+  if (user.isModified("resetOtp") && user.resetOtp) {
+    user.resetOtp = await bcrypt.hash(user.resetOtp, parseInt(5, 10));
   }
   next();
 });

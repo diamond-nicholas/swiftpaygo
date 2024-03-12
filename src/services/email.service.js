@@ -25,7 +25,7 @@ const sendResetPasswordEmail = async (to, token) => {
   const subject = "Reset password";
   const resetPasswordUrl = `${config.clientURL}/auth/reset-password?token=${token}`;
   const text = `Dear user,
-  To reset your password, click on this link: ${resetPasswordUrl}
+  To reset your password, Enter this OTP: ${token}
   If you did not request any password resets, then ignore this email.`;
   await sendEmail(to, subject, text);
 };

@@ -1,6 +1,6 @@
 const httpStatus = require("http-status");
 const tokenService = require("./token.service");
-const userService = require("./user.service");
+const userService = require("./user/user.service");
 const { Token, User } = require("../models");
 const ApiError = require("../utils/ApiError");
 const { tokenTypes } = require("../config/token");
@@ -154,7 +154,7 @@ const verifyAuthOTP = async (otp, accessToken) => {
   const isOTPMatch = await user.verifyOTP(otp);
 
   if (!isOTPMatch) {
-    throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid OTP");
+    throw new ApiError(httpStatus.UNAUTHORIZED, "Access token mismatch");
   }
 
   user.isEmailVerified = true;
@@ -192,8 +192,11 @@ const setTransactionPin = async (accessToken, userPin) => {
 
 const loginUserWithEmailAndPassword = async (email, password) => {
   const user = await User.findOne({ email });
+  if (!user) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, "Incorrect email");
+  }
   if (!user || !(await user.isPasswordMatch(password))) {
-    throw new ApiError(httpStatus.UNAUTHORIZED, "Incorrect email or password");
+    throw new ApiError(httpStatus.UNAUTHORIZED, "Incorrect password");
   }
   return user;
 };
@@ -254,6 +257,16 @@ const emailVerification = async (emailVerificationToken) => {
   return updatedUser;
 };
 
+const forgetPassword = async (email) => {
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, "Email not found");
+  }
+  const resetPasswordToken = await tokenService.generateResetPasswordOTP(user);
+  console.log(resetPasswordToken);
+  return resetPasswordToken;
+};
+
 const resetPasswordFromEmailToken = async (resetPasswordToken, newPassword) => {
   const resetPasswordTokenDoc = await tokenService.verifyToken(
     resetPasswordToken,
@@ -299,4 +312,5 @@ module.exports = {
   emailVerification,
   resetPasswordFromEmailToken,
   logoutUser,
+  forgetPassword,
 };

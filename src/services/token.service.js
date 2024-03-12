@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const moment = require("moment");
 const httpStatus = require("http-status");
 const config = require("../config/config");
-const userService = require("./user.service");
+const userService = require("./user/user.service");
 const { Token } = require("../models");
 const ApiError = require("../utils/ApiError");
 const { tokenTypes } = require("../config/token");
@@ -35,9 +35,25 @@ const generateOTP = () => {
 
 const generateAndSaveOTP = async (user) => {
   const otp = generateOTP();
-  console.log(otp);
+  // console.log(otp);
   user.otp = otp;
   user.otpExpires = moment().add(config.jwt.otpExpirationMinutes, "minutes");
+  await user.save();
+  return otp;
+};
+
+const generateResetPasswordOTP = async (user) => {
+  // const user = await userService.getUserByEmail(email);
+  // if (!user) {
+  //   throw new ApiError(httpStatus.NOT_FOUND, "No users found with this email");
+  // }
+  const otp = generateOTP();
+  console.log(otp);
+  user.resetOtp = otp;
+  user.resetOtpExpires = moment().add(
+    config.jwt.otpExpirationMinutes,
+    "minutes"
+  );
   await user.save();
   return otp;
 };
@@ -68,6 +84,7 @@ const verifyOTP = async (otp) => {
   if (!isOTPMatch) {
     throw new ApiError(httpStatus.NOT_FOUND, "User not found or OTP mismatch");
   }
+  console.log(isOTPMatch);
 
   user.otp = undefined;
   user.otpExpires = undefined;
@@ -170,4 +187,5 @@ module.exports = {
   generateEmailVerificationToken,
   generateAndSaveOTP,
   verifyOTP,
+  generateResetPasswordOTP,
 };

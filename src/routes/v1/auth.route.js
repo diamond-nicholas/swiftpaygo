@@ -11,6 +11,18 @@ router.post(
 );
 
 router.post(
+  "/login",
+  validate(authValidation.loginUserWithEmailAndPassword),
+  authController.loginUserWithEmailAndPassword
+);
+
+router.post(
+  "/forgot-password",
+  validate(authValidation.forgotPassword),
+  authController.forgotPassword
+);
+
+router.post(
   "/resend-otp",
   validate(authController.resendOTP),
   authController.resendOTP

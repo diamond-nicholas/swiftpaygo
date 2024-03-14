@@ -242,10 +242,12 @@ const changePassword = async (userBody, accessToken) => {
       "New password and confirm password must be the same"
     );
   }
-  const salt = await bcrypt.genSalt(8);
-  const hashedPassword = await bcrypt.hash(userBody.new_password, salt);
+  // const salt = await bcrypt.genSalt(8);
+  // const hashedPassword = await bcrypt.hash(userBody.new_password, salt);
 
-  await userService.updateUserById(user._id, { password: hashedPassword });
+  await userService.updateUserById(user._id, {
+    password: userBody.new_password,
+  });
 };
 
 const emailVerification = async (emailVerificationToken) => {

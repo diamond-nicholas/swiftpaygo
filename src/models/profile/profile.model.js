@@ -17,15 +17,13 @@ const userProfileSchema = mongoose.Schema(
       type: String,
       default: null,
     },
-    preferences: {
-      darkMode: {
-        type: Boolean,
-        default: false,
-      },
-      billTag: {
-        type: String,
-        default: null,
-      },
+    darkMode: {
+      type: Boolean,
+      default: false,
+    },
+    billTag: {
+      type: String,
+      default: null,
     },
   },
   {

@@ -1,6 +1,7 @@
 const httpStatus = require("http-status");
-const { User } = require("../../models");
+const { User, Token } = require("../../models");
 const ApiError = require("../../utils/ApiError");
+const { tokenTypes } = require("../../config/token");
 
 const createUser = async (userBody) => {
   if (await User.isEmailTaken(userBody.email)) {
@@ -23,27 +24,40 @@ const getUserByEmail = async (email) => {
   return User.findOne({ email });
 };
 
-const updateUserById = async (userId, updateBody) => {
-  let user = await getUserById(userId);
-  if (!user) {
-    throw new ApiError(httpStatus.NOT_FOUND, "User not found");
-  }
-  user = await updateUser(user, updateBody);
-  return user;
-};
-
 const updateUser = async (user, updateBody) => {
-  if (updateBody.teams) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Cannot update user teams");
-  }
   if (
     updateBody.email &&
     (await User.isEmailTaken(updateBody.email, user.id))
   ) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Email already taken");
   }
+  if (await User.isMobileTaken(userBody.mobile)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Mobile number already taken");
+  }
   Object.assign(user, updateBody);
   await user.save();
+  return user;
+};
+
+const updateUserById = async (accessToken, updateBody, userid) => {
+  const accessTokenDoc = await Token.findOne({
+    token: accessToken,
+    type: tokenTypes.ACCESS,
+  });
+  if (!accessTokenDoc) {
+    throw new Error("Invalid or expired access token");
+  }
+  let user = await User.findOne({ _id: accessTokenDoc.user });
+
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  if (userid != user._id) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Incorrect userid");
+  }
+
+  user = await updateUser(user, updateBody);
   return user;
 };
 

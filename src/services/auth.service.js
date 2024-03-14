@@ -181,10 +181,18 @@ const setTransactionPin = async (accessToken, userPin) => {
     throw new ApiError(httpStatus.NOT_FOUND, "User not found");
   }
 
+  if (!user.isEmailVerified) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Email not verified. Please verify your email address to proceed."
+    );
+  }
+
   if (userPin.transaction_pin !== userPin.confirm_transaction_pin) {
     throw new ApiError(httpStatus.UNAUTHORIZED, "Transaction pin mismatch");
   }
   user.transactionPin = userPin.transaction_pin;
+  user.isKycZeroVerified = true;
   await user.save();
 
   return user;

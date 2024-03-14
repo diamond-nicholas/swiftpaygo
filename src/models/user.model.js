@@ -54,6 +54,10 @@ const userSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isKycZeroVerified: {
+      type: Boolean,
+      default: false,
+    },
     password: {
       type: String,
       required: true,

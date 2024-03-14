@@ -21,9 +21,13 @@ const userProfileSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    billTag: {
+    swiftPayTag: {
       type: String,
       default: null,
+    },
+    biometricVerification: {
+      type: Boolean,
+      default: false,
     },
   },
   {

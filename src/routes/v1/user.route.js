@@ -10,4 +10,10 @@ router.put(
   userController.updateUserById
 );
 
+router.post(
+  "/change-password",
+  validate(userController.changePassword),
+  userController.changePassword
+);
+
 module.exports = router;

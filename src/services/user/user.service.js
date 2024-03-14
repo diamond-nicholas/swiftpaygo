@@ -31,7 +31,7 @@ const updateUser = async (user, updateBody) => {
   ) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Email already taken");
   }
-  if (await User.isMobileTaken(userBody.mobile)) {
+  if (await User.isMobileTaken(updateBody.mobile)) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Mobile number already taken");
   }
   Object.assign(user, updateBody);
@@ -53,7 +53,7 @@ const updateUserById = async (accessToken, updateBody, userid) => {
     throw new ApiError(httpStatus.NOT_FOUND, "User not found");
   }
 
-  if (userid != user._id) {
+  if (userid.toString() !== user._id.toString()) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Incorrect userid");
   }
 
@@ -103,6 +103,40 @@ const deleteTeamById = async (userId, teamId) => {
   await user.save();
   return user;
 };
+const changePassword = async (accessToken, userBody) => {
+  const accessTokenDoc = await Token.findOne({
+    token: accessToken,
+    type: tokenTypes.ACCESS,
+  });
+
+  if (!accessTokenDoc) {
+    throw new Error("Invalid or expired access token");
+  }
+  const user = await User.findOne({ _id: accessTokenDoc.user });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  if (!(await user.isPasswordMatch(userBody.password))) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, "Incorrect password");
+  }
+
+  if (userBody.new_password !== userBody.confirm_password) {
+    throw new ApiError(
+      httpStatus.UNAUTHORIZED,
+      "New password and confirm password must be the same"
+    );
+  }
+
+  await updateUserById(
+    accessToken,
+    {
+      password: userBody.new_password,
+    },
+    user._id
+  );
+};
 
 module.exports = {
   createUser,
@@ -115,4 +149,5 @@ module.exports = {
   addTeam,
   updateTeamById,
   deleteTeamById,
+  changePassword,
 };

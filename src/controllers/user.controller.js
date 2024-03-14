@@ -26,6 +26,19 @@ const updateUserById = catchAsync(async (req, res) => {
   });
 });
 
+const changePassword = catchAsync(async (req, res) => {
+  if (!req.headers.authorization) {
+    throw new Error("Token is required");
+  }
+  const [, token] = req.headers.authorization.split(" ");
+  const user = await userService.changePassword(token, req.body);
+  res.status(httpStatus.OK).send({
+    user: "",
+    message: "Password update success",
+  });
+});
+
 module.exports = {
   updateUserById,
+  changePassword,
 };

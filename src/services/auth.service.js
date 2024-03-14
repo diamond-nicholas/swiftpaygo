@@ -217,39 +217,6 @@ const getSelf = async (accessToken) => {
   return user;
 };
 
-const changePassword = async (userBody, accessToken) => {
-  const accessTokenDoc = await Token.findOne({
-    token: accessToken,
-    type: tokenTypes.ACCESS,
-  });
-
-  if (!accessTokenDoc) {
-    throw new Error("Invalid or expired access token");
-  }
-  const user = await User.findOne({ _id: accessTokenDoc.user });
-
-  if (!user) {
-    throw new Error("User not found");
-  }
-
-  if (!(await user.isPasswordMatch(userBody.password))) {
-    throw new ApiError(httpStatus.UNAUTHORIZED, "Incorrect password");
-  }
-
-  if (userBody.new_password !== userBody.confirm_password) {
-    throw new ApiError(
-      httpStatus.UNAUTHORIZED,
-      "New password and confirm password must be the same"
-    );
-  }
-  // const salt = await bcrypt.genSalt(8);
-  // const hashedPassword = await bcrypt.hash(userBody.new_password, salt);
-
-  await userService.updateUserById(user._id, {
-    password: userBody.new_password,
-  });
-};
-
 const emailVerification = async (emailVerificationToken) => {
   const emailVerificationTokenDoc = await tokenService.verifyToken(
     emailVerificationToken,
@@ -346,7 +313,6 @@ module.exports = {
   resendOTP,
   setTransactionPin,
   loginUserWithEmailAndPassword,
-  changePassword,
   emailVerification,
   resetPasswordFromEmailToken,
   logoutUser,

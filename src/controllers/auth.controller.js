@@ -54,6 +54,23 @@ const loginUserWithEmailAndPassword = catchAsync(async (req, res) => {
     .send({ user, token: tokens.access, message });
 });
 
+const getSelf = catchAsync(async (req, res) => {
+  if (!req.headers.authorization) {
+    throw new Error("Token is required");
+  }
+  const [, token] = req.headers.authorization.split(" ");
+  const user = await authService.getSelf(token);
+  const tokens = await tokenService.generateAuthTokens(user);
+  res
+    .cookie("refreshToken", tokens.refresh.token, {
+      maxAge: tokens.refresh.maxAge,
+      httpOnly: true,
+      sameSite: "none",
+      secure: true,
+    })
+    .send({ user, token: tokens.access, message: "" });
+});
+
 const resendOTP = catchAsync(async (req, res) => {
   if (!req.headers.authorization) {
     throw new Error("Token is required");
@@ -134,6 +151,7 @@ module.exports = {
   setTransactionPin,
   forgotPassword,
   refreshTokens,
+  getSelf,
 };
 
 // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9

@@ -201,6 +201,22 @@ const loginUserWithEmailAndPassword = async (email, password) => {
   return user;
 };
 
+const getSelf = async (accessToken) => {
+  const accessTokenDoc = await Token.findOne({
+    token: accessToken,
+    type: tokenTypes.ACCESS,
+  });
+  if (!accessTokenDoc) {
+    throw new Error("Invalid or expired access token");
+  }
+  const user = await User.findOne({ _id: accessTokenDoc.user });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+  return user;
+};
+
 const changePassword = async (userBody, accessToken) => {
   const accessTokenDoc = await Token.findOne({
     token: accessToken,
@@ -211,7 +227,6 @@ const changePassword = async (userBody, accessToken) => {
     throw new Error("Invalid or expired access token");
   }
   const user = await User.findOne({ _id: accessTokenDoc.user });
-  console.log(user);
 
   if (!user) {
     throw new Error("User not found");
@@ -335,4 +350,5 @@ module.exports = {
   logoutUser,
   forgetPassword,
   refreshAuth,
+  getSelf,
 };

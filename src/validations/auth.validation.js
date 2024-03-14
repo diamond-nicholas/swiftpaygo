@@ -32,6 +32,12 @@ const resendOTP = {
   }),
 };
 
+const getSelf = {
+  headers: Joi.object({
+    token: Joi.string().required(),
+  }),
+};
+
 const setTransactionPin = {
   headers: Joi.object({
     token: Joi.string().required(),
@@ -76,4 +82,5 @@ module.exports = {
   forgotPassword,
   resetPasswordFromEmailToken,
   refreshTokens,
+  getSelf,
 };

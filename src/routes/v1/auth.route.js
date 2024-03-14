@@ -16,6 +16,8 @@ router.post(
   authController.loginUserWithEmailAndPassword
 );
 
+router.get("/self", validate(authValidation.getSelf), authController.getSelf);
+
 router.post(
   "/forgot-password",
   validate(authValidation.forgotPassword),
